@@ -50,11 +50,25 @@ city_final =
     outputs_df = map2 (unsolved_homicides,total_homicides, prop.test),
     final_outputs_df = map(outputs_df, broom::tidy)) %>% 
   unnest(final_outputs_df) %>% 
-  arrange(desc(estimate)) %>% 
   select (city_state, estimate, conf.low, conf.high)
 
 city_final
 ```
 I used mutate to run prop.test for each of the cities and extract both the proportion of unsolved homicides and the confidence interval for each via purrr::map and purrr::map2. Then I unnested the final_outputs_df and selected variables I wanted to create a tidy dataframe with estimated proportions and CIs for each city.
+
+```{r}
+city_plot = 
+city_final %>% 
+ggplot(aes(x=fct_reorder(city_state, estimate), y=estimate))+
+  geom_point()+
+  geom_errorbar(aes(ymin=conf.low, ymax=conf.high))+
+  labs(
+    title = "Estimates and confidence intervals of unsolved homocide for each city",
+    x = "cities") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+city_plot
+```
+I used ggplot to create a scatter plot showing the estimates and CIs for each city. I used geom_errorbar to add error bars based on the upper and lower limits. I used fct_reorder to organize cities according to the proportion of unsolved homicides. lastly, I used labs to add title and x-axis label. 
 
 # problem 3
