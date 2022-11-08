@@ -43,5 +43,18 @@ prop.test(
 ```
 I used filter to filter out other city_state except "Baltimore, MD". Then I used prop.test function to estimate the proportion of homicides that are unsolved and applied the broom::tidy to pull the estimated proportion and confidence intervals.
 
+```{r}
+city_final = 
+  homicide %>% 
+  mutate(
+    outputs_df = map2 (unsolved_homicides,total_homicides, prop.test),
+    final_outputs_df = map(outputs_df, broom::tidy)) %>% 
+  unnest(final_outputs_df) %>% 
+  arrange(desc(estimate)) %>% 
+  select (city_state, estimate, conf.low, conf.high)
+
+city_final
+```
+I used mutate to run prop.test for each of the cities and extract both the proportion of unsolved homicides and the confidence interval for each via purrr::map and purrr::map2. Then I unnested the final_outputs_df and selected variables I wanted to create a tidy dataframe with estimated proportions and CIs for each city.
 
 # problem 3
