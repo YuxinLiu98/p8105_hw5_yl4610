@@ -6,7 +6,6 @@ date: "2022-11-08"
 
 ```{r setup, message=FALSE}
 library(tidyverse)
-library (readr)
 ```
 
 # problem 1 
@@ -30,6 +29,19 @@ homicide_raw %>%
 
 homicide
 ```
+
+I used mutate to create a city_state variable. Then I used group_by and summarize to summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
+
+```{r}
+baltimore = 
+  homicide %>% 
+  filter(city_state == "Baltimore, MD") 
+
+prop.test(
+  baltimore$unsolved_homicides,baltimore$total_homicides) %>% 
+  broom::tidy()
+```
+I used filter to filter out other city_state except "Baltimore, MD". Then I used prop.test function to estimate the proportion of homicides that are unsolved and applied the broom::tidy to pull the estimated proportion and confidence intervals.
 
 
 # problem 3
