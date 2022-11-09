@@ -16,7 +16,7 @@ homicide_raw = read_csv( "./data/homicide_data.csv")
 ```
 This dataset contains variables such as `r names(homicide_raw)`. It contains `r ncol(homicide_raw)` columns and `r nrow(homicide_raw)` rows. 
 
-```{r, results='hide'}
+```{r}
 homicide = 
 homicide_raw %>% 
   mutate (
@@ -72,3 +72,27 @@ city_plot
 I used ggplot to create a scatter plot showing the estimates and CIs for each city. I used geom_errorbar to add error bars based on the upper and lower limits. I used fct_reorder to organize cities according to the proportion of unsolved homicides. lastly, I used labs to add title and x-axis label. 
 
 # problem 3
+```{r}
+sim_mean_sd = function(n = 30, mu, sigma = 5) {
+  sim_data = tibble(
+    x = rnorm(n, mean = mu, sd = sigma) %>% 
+    t.test (mu = 0, alpha = 0.05, conf.level = 0.95) %>% 
+      broom::tidy ()
+    )
+}
+```
+
+```{r}
+sim_results_df = 
+  expand_grid(
+    sample_size = 30,
+    mu = 0:6,
+    iter = 1:10
+  ) %>% 
+  mutate(
+    estimate_df = map(sample_size, mu, sim_mean_sd)
+  ) %>% 
+  unnest(estimate_df)
+```
+I conducted a simulation in a one-sample t-test with n=30, mu=0,1,2,3,4,5,6, and sd=5 via function. I generated 5000 datasets. 
+# change ite size to 5000 at the end 
