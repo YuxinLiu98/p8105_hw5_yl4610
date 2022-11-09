@@ -100,7 +100,7 @@ I conducted a simulation in a one-sample t-test with n=30, mu=0,1,2,3,4,5,6, and
 # change ite size to 5000 at the end 
 
 ```{r}
-plot_prop = 
+plot_prop1 = 
 norm_results_df %>%
   group_by(mu) %>%
   summarize(
@@ -113,8 +113,29 @@ norm_results_df %>%
        x = "True means",
        y = "Proportion of times the null was rejected") 
 
-plot_prop
+plot_prop1
 ```
 I used ggplot to create a scatter plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. 
 As true mean increases, proportion of times the null was rejected increases. 
 # effect sizes? correct calculation?
+
+```{r}
+plot_prop2 = 
+norm_results_df %>%
+  group_by(mu) %>%
+  summarize(ave_estimate_mu = mean(estimate)) %>%
+  ggplot(aes(x = mu, y = ave_estimate_mu, group = mu)) + 
+  geom_point() + 
+  labs(title = "Average estimate of mu vs True value of mu", 
+       x = "True value of mu", 
+       y = "Average estimate of mu") 
+plot_prop2
+```
+I used ggplot to make a plot showing the average estimate of mu hat on the y axis and the true value of mu on the x axis. 
+
+```{r}
+
+```
+
+Make a second plot (or overlay on the first) the average estimate of μ̂  only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂  across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
+
