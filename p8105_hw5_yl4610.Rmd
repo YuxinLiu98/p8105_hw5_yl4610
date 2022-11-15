@@ -6,9 +6,25 @@ date: "2022-11-08"
 
 ```{r setup, message=FALSE}
 library(tidyverse)
+library(p8105.datasets)
+library(viridis)
 ```
 
 # problem 1 
+
+The code chunk below imports the data in individual spreadsheets contained in `./data/Q1data/`. To do this, I create a dataframe that includes the list of all files in that directory and the complete path to each file. As a next step, I `map` over paths and import data using the `read_csv` function. Finally, I `unnest` the result of `map`.
+
+```{r, message=FALSE, warning=FALSE}
+full_df = 
+  tibble(
+    files = list.files("data/Q1data/"),
+    path = str_c("data/Q1data/", files)
+  ) %>% 
+  mutate(data = map(path, read_csv)) %>% 
+  unnest()
+```
+
+
 
 # problem 2 
 ```{r, message=FALSE}
@@ -147,7 +163,7 @@ norm_results_df %>%
 plot_prop3
 ```
 
-I used ggplot to make a second plot showing the average estimate of mu hat  only in samples for which the null was rejected on the y axis and the true value of mu on the x axis. 
+I used ggplot to make a second plot showing the average estimate of mu hat only in samples for which the null was rejected on the y axis and the true value of mu on the x axis. 
 
 The sample average of mu hat across tests for which the null is rejected is  approximately equal to the true value of mu when mu equals to 5 and 6 because as power and effect sizes increase, XXX
 
