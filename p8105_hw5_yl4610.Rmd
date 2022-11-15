@@ -41,6 +41,16 @@ tidy_df =
   select(group, subj = files, week, outcome)
 ```
 
+spaghetti plot showing observations on each subject over time:
+```{r}
+tidy_df %>% 
+  ggplot(aes(x = week, y = outcome, group = subj, color = group)) + 
+  geom_point() + 
+  geom_path() + 
+  facet_grid(~group)
+```
+This plot suggests high within-subject correlation -- subjects who start above average end up above average, and those that start below average end up below average. Subjects in the control group generally don't change over time, but those in the experiment group increase their outcome in a roughly linear way. 
+
 # problem 2 
 ```{r, message=FALSE}
 homicide_raw = read_csv( "./data/homicide_data.csv") 
