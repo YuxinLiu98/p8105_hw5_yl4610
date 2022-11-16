@@ -1,6 +1,7 @@
 ---
 title: "p8105_hw5_yl4610"
 output: github_document
+author: "Yuxin Liu"
 date: "2022-11-08"
 ---
 
@@ -11,9 +12,7 @@ library(viridis)
 ```
 
 # problem 1 
-
-The code chunk below imports the data in individual spreadsheets contained in `./data/Q1data/`. To do this, I create a dataframe that includes the list of all files in that directory and the complete path to each file. As a next step, I `map` over paths and import data using the `read_csv` function. Finally, I `unnest` the result of `map`.
-
+The code chunk below imports the data in individual spreadsheets contained in `./data/Q1data/`. I create a dataframe that includes the list of all files in that directory and the complete path to each file. Then, I `map` over paths and import data using the `read_csv` function. Finally, I `unnest` the result of `map`.
 ```{r, message=FALSE, warning=FALSE}
 full_df = 
   tibble(
@@ -25,7 +24,6 @@ full_df =
 ```
 
 The result of the previous code chunk isn't tidy -- data are wide rather than long, and some important variables are included as parts of others. The code chunk below tides the data using string manipulations on the file, converting from wide to long, and selecting relevant variables. 
-
 ```{r}
 tidy_df = 
   full_df %>% 
@@ -41,7 +39,7 @@ tidy_df =
   select(group, subj = files, week, outcome)
 ```
 
-spaghetti plot showing observations on each subject over time:
+I created a spaghetti plot showing observations on each subject over time:
 ```{r}
 tidy_df %>% 
   ggplot(aes(x = week, y = outcome, group = subj, color = group)) + 
@@ -49,6 +47,7 @@ tidy_df %>%
   geom_path() + 
   facet_grid(~group)
 ```
+
 This plot suggests high within-subject correlation -- subjects who start above average end up above average, and those that start below average end up below average. Subjects in the control group generally don't change over time, but those in the experiment group increase their outcome in a roughly linear way. 
 
 # problem 2 
@@ -70,8 +69,7 @@ homicide_raw %>%
 
 homicide
 ```
-
-I used mutate to create a city_state variable. Then I used group_by and summarize to summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
+I believed that the one observation of "Tulsa, AL" was mis-labeled, so I changed it to "Tulsa, OK" via ifelse. I used mutate to create a city_state variable. Then I used group_by and summarize to summarize within cities to obtain the total number of homicides and the number of unsolved homicides.
 
 ```{r}
 baltimore = 
@@ -83,6 +81,8 @@ prop.test(
   broom::tidy()
 ```
 I used filter to filter out other city_state except "Baltimore, MD". Then I used prop.test function to estimate the proportion of homicides that are unsolved and applied the broom::tidy to pull the estimated proportion and confidence intervals.
+
+The estimate was around 0.65, lower bound of 95% confidence interval was around 0.63, and upper bound was around 0.66.
 
 ```{r}
 city_final = 
@@ -110,11 +110,12 @@ ggplot(aes(x=fct_reorder(city_state, estimate), y=estimate))+
 
 city_plot
 ```
+
 I used ggplot to create a scatter plot showing the estimates and CIs for each city. I used geom_errorbar to add error bars based on the upper and lower limits. I used fct_reorder to organize cities according to the proportion of unsolved homicides. lastly, I used labs to add title and x-axis label. 
 
 # problem 3
 ```{r}
-norm_dis = function(n = 30, mu, sigma = 5) {
+norm_dis = function(n = 30, mu = 0, sigma = 5) {
   norm_data = tibble(
     x = rnorm(n, mean = mu, sd = sigma)) 
   
@@ -122,14 +123,14 @@ norm_dis = function(n = 30, mu, sigma = 5) {
     t.test (mu = 0, alpha = 0.05, conf.level = 0.95) %>% 
       broom::tidy ()
 }
-norm_dis
 ```
+I created a function to conduct an one-sample t-test with n = 30, mu = 0, and sigma = 5 (alpha = 0.05 and confidence level = 0.95). 
 
 ```{r}
 norm_results_df = 
   expand_grid(
-    mu = 0:6,
-    iter = 1:10) %>% 
+    mu = 0,
+    iter = 1:5000) %>% 
   mutate(
     estimate_df = map(mu, ~norm_dis(mu=.x))
   ) %>% 
@@ -137,18 +138,33 @@ norm_results_df =
 
 norm_results_df
 ```
-I conducted a simulation in a one-sample t-test with n=30, mu=0,1,2,3,4,5,6, and sd=5 via function. I generated 5000 datasets. 
-# change ite size to 5000 at the end 
+I set mu=0 and generate 5000 datasets from the model by applying it to the function, using iterations, and using map function. 
+
+Repeat the above for mu={1,2,3,4,5,6}
+```{r}
+norm_results_df = 
+  expand_grid(
+    mu = 0:6,
+    iter = 1:5000) %>% 
+  mutate(
+    estimate_df = map(mu, ~norm_dis(mu=.x))
+  ) %>% 
+  unnest(estimate_df) 
+
+norm_results_df
+```
+I conducted a simulation in a one-sample t-test with n=30, mu=0,1,2,3,4,5,6, and sigma=5 via function. I included 0 as well because it was applied to the same function. I generated 5000 datasets via iterations and mapped them lastly. 
 
 ```{r}
 plot_prop1 = 
 norm_results_df %>%
+  filter(p.value < 0.05)%>%
   group_by(mu) %>%
   summarize(
-    sum_pvalue = sum(p.value < 0.05),
     sum_n = n()) %>% 
-  mutate (y_value = sum_pvalue/sum_n) %>% 
+  mutate (y_value = sum_n/5000) %>% 
   ggplot(aes(x = mu, y = y_value)) + 
+  geom_line()+
   geom_point() + 
   labs(title = "Proportion of times the null was rejected vs True means", 
        x = "True means",
@@ -156,9 +172,10 @@ norm_results_df %>%
 
 plot_prop1
 ```
-I used ggplot to create a scatter plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of μ on the x axis. 
+
+I used ggplot to create a plot showing the proportion of times the null was rejected (the power of the test) on the y axis and the true value of mu on the x axis. 
 As true mean increases, proportion of times the null was rejected increases. 
-# effect sizes? correct calculation?
+When the effect size increases, the power increases.
 
 ```{r}
 plot_prop2 = 
@@ -172,6 +189,7 @@ norm_results_df %>%
        y = "Average estimate of mu hat") 
 plot_prop2
 ```
+
 I used ggplot to make a plot showing the average estimate of mu hat on the y axis and the true value of mu on the x axis. 
 
 ```{r}
@@ -190,7 +208,10 @@ plot_prop3
 
 I used ggplot to make a second plot showing the average estimate of mu hat only in samples for which the null was rejected on the y axis and the true value of mu on the x axis. 
 
-The sample average of mu hat across tests for which the null is rejected is  approximately equal to the true value of mu when mu equals to 5 and 6 because as power and effect sizes increase, XXX
+The average estimate of mu hat is approximately equal to the true value of mu.The sample average of mu hat across tests for which the null is rejected is  approximately equal to the true value of mu as mu increases, especially for those mu greater than/equal to 4. 
+
+When we have a small sample mean, our effect size is small (power is small as well). We only reject the null hypothesis when the estimated sample values are significantly different from the null. Thus, when we have a small sample mean, there is no statistically significant difference between samples and true values and we fail to reject the null. However, in this case, when mu greater than/equal to 4, we could reject the null. We have a larger effect size and power. 
+
 
 
 
